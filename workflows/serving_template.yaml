@@ -1,14 +1,14 @@
 apiVersion: ai.sap.com/v1alpha1
 kind: ServingTemplate
 metadata:
-  name: supply-chain-agent
+  name: supply-chain-v2
   annotations:
     scenarios.ai.sap.com/description: "Supply Chain AI Agent using Neo4j Graph"
-    scenarios.ai.sap.com/name: "supply-chain-agent"
+    scenarios.ai.sap.com/name: "supply-chain-v2"
     executables.ai.sap.com/description: "AI Agent that queries Neo4j supply chain graph"
-    executables.ai.sap.com/name: "supply-chain-agent-neo4j"
+    executables.ai.sap.com/name: "supply-chain-v2"
   labels:
-    scenarios.ai.sap.com/id: "supply-chain-agent"
+    scenarios.ai.sap.com/id: "supply-chain-v2"
     ai.sap.com/version: "1.0.0"
 spec:
   inputs:
