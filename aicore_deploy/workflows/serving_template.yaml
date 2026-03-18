@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: supply-chain-agent          # Executable ID — must be unique in your AI Core instance
+  annotations:
+    scenarios.ai.sap.com/description: "Supply Chain AI Agent using Neo4j Graph"
+    scenarios.ai.sap.com/name: "Supply Chain Agent"
+    executables.ai.sap.com/description: "AI Agent that queries Neo4j supply chain graph and answers questions"
+    executables.ai.sap.com/name: "Supply Chain Agent (Neo4j)"
+  labels:
+    scenarios.ai.sap.com/id: "supply-chain-agent"   # Scenario ID — used to group executables
+    ai.sap.com/version: "1.0.0"
+spec:
+  imagePullSecrets:
+    - name: docker-registry-secret   # Docker registry secret registered in AI Launchpad
+  entrypoint: agent-pipeline
+  templates:
+    - name: agent-pipeline
+      steps:
+        - - name: run-agent
+            template: agent-container
+
+    - name: agent-container
+      container:
+        image: docker.io/priyaannamalai/neo4j_connect:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - "gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 120 agent:app"
+        env:
+          # Neo4j AuraDB credentials — passed directly as environment variables
+          - name: NEO4J_URI
+            value: "neo4j+s://59d34f34.databases.neo4j.io"
+          - name: NEO4J_USERNAME
+            value: "neo4j"
+          - name: NEO4J_PASSWORD
+            value: "M_GHAzxZtSFPMM2GfBIWhRN-Lk0BlDHxdBQfdPeeZV8"
+        ports:
+          - containerPort: 8080
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "0.5"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
