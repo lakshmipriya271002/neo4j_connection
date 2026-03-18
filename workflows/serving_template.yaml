@@ -15,6 +15,8 @@ spec:
     parameters: []
   template:
     apiVersion: "serving.kserve.io/v1beta1"
+    metadata:
+      annotations: {}
     spec:
       predictor:
         imagePullSecrets:
