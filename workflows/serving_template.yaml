@@ -1,35 +1,49 @@
-apiVersion: argoproj.io/v1alpha1
-kind: WorkflowTemplate
+apiVersion: ai.sap.com/v1alpha1
+kind: ServingTemplate
 metadata:
-  name: supply-chain-agent          # Executable ID — must be unique in your AI Core instance
+  name: supply-chain-agent
   annotations:
     scenarios.ai.sap.com/description: "Supply Chain AI Agent using Neo4j Graph"
     scenarios.ai.sap.com/name: "Supply Chain Agent"
     executables.ai.sap.com/description: "AI Agent that queries Neo4j supply chain graph and answers questions"
     executables.ai.sap.com/name: "Supply Chain Agent (Neo4j)"
   labels:
-    scenarios.ai.sap.com/id: "supply-chain-agent"   # Scenario ID — used to group executables
+    scenarios.ai.sap.com/id: "supply-chain-agent"
     ai.sap.com/version: "1.0.0"
 spec:
-  imagePullSecrets:
-    - name: neo4j   # Docker registry secret registered in AI Launchpad
-  entrypoint: agent-pipeline
-  templates:
-    - name: agent-pipeline
-      steps:
-        - - name: run-agent
-            template: agent-container
-
-    - name: agent-container
-      container:
-        image: docker.io/priyaannamalai/neo4j_connect:latest
-        command: ["/bin/sh", "-c"]
-        args:
-          - "gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 120 agent:app"
-        env:
-          - name: NEO4J_URI
-            value: "neo4j+s://59d34f34.databases.neo4j.io"
-          - name: NEO4J_USERNAME
-            value: "neo4j"
-          - name: NEO4J_PASSWORD
-            value: "M_GHAzxZtSFPMM2GfBIWhRN-Lk0BlDHxdBQfdPeeZV8"
+  inputs:
+    parameters: []
+  template:
+    apiVersion: "serving.kserve.io/v1beta1"
+    metadata:
+      annotations:
+        autoscaling.knative.dev/metric: concurrency
+        autoscaling.knative.dev/target: "1"
+        autoscaling.knative.dev/targetBurstCapacity: "0"
+    spec:
+      predictor:
+        imagePullSecrets:
+          - name: neo4j
+        containers:
+          - name: kserve-container
+            image: docker.io/priyaannamalai/neo4j_connect:latest
+            command: ["/bin/sh", "-c"]
+            args:
+              - "gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 120 agent:app"
+            ports:
+              - containerPort: 8080
+                protocol: TCP
+            env:
+              - name: NEO4J_URI
+                value: "neo4j+s://59d34f34.databases.neo4j.io"
+              - name: NEO4J_USERNAME
+                value: "neo4j"
+              - name: NEO4J_PASSWORD
+                value: "M_GHAzxZtSFPMM2GfBIWhRN-Lk0BlDHxdBQfdPeeZV8"
+            resources:
+              requests:
+                cpu: "0.5"
+                memory: "512Mi"
+              limits:
+                cpu: "1"
+                memory: "1Gi"
