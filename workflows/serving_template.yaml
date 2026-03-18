@@ -16,29 +16,31 @@ spec:
   template:
     apiVersion: "serving.kserve.io/v1beta1"
     metadata:
-      annotations: {}
+      annotations: |
+        autoscaling.knative.dev/metric: concurrency
+        autoscaling.knative.dev/target: 1
+        autoscaling.knative.dev/targetBurstCapacity: 0
+      labels: |
+        ai.sap.com/resourcePlan: basic
     spec: |
       predictor:
         imagePullSecrets:
           - name: neo4j
+        minReplicas: 1
+        maxReplicas: 2
         containers:
-          - name: kserve-container
-            image: docker.io/priyaannamalai/neo4j_connect:latest
-            command:
-              - /bin/sh
-              - -c
-              - gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 120 agent:app
-            env:
-              - name: NEO4J_URI
-                value: "neo4j+s://59d34f34.databases.neo4j.io"
-              - name: NEO4J_USERNAME
-                value: "neo4j"
-              - name: NEO4J_PASSWORD
-                value: "M_GHAzxZtSFPMM2GfBIWhRN-Lk0BlDHxdBQfdPeeZV8"
-            resources:
-              requests:
-                cpu: "0.5"
-                memory: "512Mi"
-              limits:
-                cpu: "1"
-                memory: "1Gi"
+        - name: kserve-container
+          image: "docker.io/priyaannamalai/neo4j_connect:latest"
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          command: ["/bin/sh", "-c"]
+          args:
+            - "gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 120 agent:app"
+          env:
+            - name: NEO4J_URI
+              value: "neo4j+s://59d34f34.databases.neo4j.io"
+            - name: NEO4J_USERNAME
+              value: "neo4j"
+            - name: NEO4J_PASSWORD
+              value: "M_GHAzxZtSFPMM2GfBIWhRN-Lk0BlDHxdBQfdPeeZV8"
