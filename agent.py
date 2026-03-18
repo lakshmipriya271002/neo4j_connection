@@ -15,33 +15,29 @@ app = Flask(__name__)
 # SAP AI Core mounts secrets as files under /run/secrets/<secret-name>/<key>
 # Fallback to environment variables for local development
 
-def load_secret(key: str, secret_name: str = "neo4j-secret") -> str:
-    """Load Neo4j credentials from environment variables injected by serving_template.yaml."""
-    value = os.environ.get(key)
-    if value:
-        return value
-    raise RuntimeError(
-        f"Environment variable '{key}' not found. "
-        f"Ensure it is set in the serving_template.yaml env section."
-    )
+_graph = None
 
-NEO4J_URI = load_secret("NEO4J_URI")
-NEO4J_USERNAME = load_secret("NEO4J_USERNAME")
-NEO4J_PASSWORD = load_secret("NEO4J_PASSWORD")
-
-graph = Graph(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
+def get_graph():
+    """Lazily initialize Neo4j connection."""
+    global _graph
+    if _graph is None:
+        uri = os.environ.get("NEO4J_URI", "")
+        username = os.environ.get("NEO4J_USERNAME", "neo4j")
+        password = os.environ.get("NEO4J_PASSWORD", "")
+        _graph = Graph(uri, auth=(username, password))
+    return _graph
 
 # ─── Query Tools ────────────────────────────────────────────────────────────
 
 def query_top_products(limit=5):
-    return graph.run("""
+    return get_graph().run("""
         MATCH (o:Order)-[:CONTAINS]->(p:Product)
         RETURN p.name AS product, count(o) AS order_count
         ORDER BY order_count DESC LIMIT $limit
     """, limit=limit).data()
 
 def query_late_orders():
-    return graph.run("""
+    return get_graph().run("""
         MATCH (o:Order)
         WHERE o.status = 'Late delivery'
         RETURN o.order_id AS order_id, o.order_date AS date
@@ -49,7 +45,7 @@ def query_late_orders():
     """).data()
 
 def query_supplier_products(name):
-    return graph.run("""
+    return get_graph().run("""
         MATCH (p:Product)-[:SUPPLIED_BY]->(s:Supplier)
         WHERE toLower(s.name) CONTAINS toLower($name)
         RETURN p.name AS product, s.name AS supplier
@@ -57,14 +53,14 @@ def query_supplier_products(name):
     """, name=name).data()
 
 def query_graph_summary():
-    return graph.run("""
+    return get_graph().run("""
         MATCH (n)
         RETURN labels(n)[0] AS label, count(n) AS count
         ORDER BY count DESC
     """).data()
 
 def query_customer_orders(customer_id):
-    return graph.run("""
+    return get_graph().run("""
         MATCH (c:Customer {customer_id: $cid})-[:PLACED]->(o:Order)
         RETURN o.order_id AS order_id, o.status AS status, o.order_date AS date
         LIMIT 10
