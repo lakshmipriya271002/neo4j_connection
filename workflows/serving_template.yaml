@@ -12,7 +12,7 @@ metadata:
     ai.sap.com/version: "1.0.0"
 spec:
   imagePullSecrets:
-    - name: docker-registry-secret   # Docker registry secret registered in AI Launchpad
+    - name: neo4j   # Docker registry secret registered in AI Launchpad
   entrypoint: agent-pipeline
   templates:
     - name: agent-pipeline
