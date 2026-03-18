@@ -4,9 +4,9 @@ metadata:
   name: supply-chain-agent
   annotations:
     scenarios.ai.sap.com/description: "Supply Chain AI Agent using Neo4j Graph"
-    scenarios.ai.sap.com/name: "Supply Chain Agent"
+    scenarios.ai.sap.com/name: "supply-chain-agent"
     executables.ai.sap.com/description: "AI Agent that queries Neo4j supply chain graph"
-    executables.ai.sap.com/name: "Supply Chain Agent (Neo4j)"
+    executables.ai.sap.com/name: "supply-chain-agent-neo4j"
   labels:
     scenarios.ai.sap.com/id: "supply-chain-agent"
     ai.sap.com/version: "1.0.0"
