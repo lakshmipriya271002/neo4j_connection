@@ -27,19 +27,9 @@ spec:
         args:
           - "gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 120 agent:app"
         env:
-          # Neo4j AuraDB credentials — passed directly as environment variables
           - name: NEO4J_URI
             value: "neo4j+s://59d34f34.databases.neo4j.io"
           - name: NEO4J_USERNAME
             value: "neo4j"
           - name: NEO4J_PASSWORD
             value: "M_GHAzxZtSFPMM2GfBIWhRN-Lk0BlDHxdBQfdPeeZV8"
-        ports:
-          - containerPort: 8080
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "0.5"
-          limits:
-            memory: "1Gi"
-            cpu: "1"
